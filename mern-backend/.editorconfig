@@ -1,0 +1,37 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# Top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+# Use 2 spaces for indentation
+[*.js]
+indent_style = space
+indent_size = 4
+# Use 4 spaces for ejs file
+[*.ejs]
+indent_style = space
+indent_size = 4
+
+# Use 2 spaces for indentation in JSON files
+[*.json]
+indent_style = space
+indent_size = 4
+
+# Exclude some files from EditorConfig settings
+[.git]
+  indent_style = space
+
+[.vscode]
+  indent_style = space
+
+[node_modules/**]
+  indent_style = space
+
+# Set the charset
+[*.{js,json}]
+charset = utf-8
