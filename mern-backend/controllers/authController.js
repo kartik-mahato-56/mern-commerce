@@ -6,6 +6,8 @@ const sendMail = require("../config/sendMail");
 const JWT = require("jsonwebtoken");
 const config = require("../config/config");
 const bCrypt = require("bcrypt");
+const User = require("../models/User");
+const {generateToken} = require("../middlewares/verifyWebToken")
 
 exports.signUp = async (req, res) => {
     try {
@@ -62,7 +64,7 @@ exports.veryfyUserEmail = async (req, res) => {
                 user.emailToken = "";
                 user.emailVerified = true;
                 user = await user.save({ validateModifiedOnly: true });
-                return res.render('success');
+                return res.render("success");
             }
         }
     } catch (error) {
@@ -89,11 +91,7 @@ exports.login = async (req, res) => {
             });
             if (user) {
                 if (bCrypt.compareSync(request.password, user.password)) {
-                    const token = JWT.sign(
-                        { _id: user._id, role: user.role },
-                        config.jwt_secret,
-                        { expiresIn: "7d" },
-                    );
+                    const token = generateToken({userId: user.id, userRole: user.role})
                     let { password, ...userData } = {
                         ...user._doc,
                         accessToken: token,
@@ -115,11 +113,11 @@ exports.login = async (req, res) => {
 //send password reset mail
 exports.sendPasswordResetEmail = async (req, res) => {
     try {
-        if(req.email === undefined || req.email === null) {
+        if (req.body.email === undefined || req.body.email === null) {
             sendResponse(res, false, 422, "Email is required");
         } else {
             let user = await userService.findOneByField({
-                email: req.email,
+                email: req.body.email,
             });
             if (user) {
                 const emailToken = randomstring.generate();
@@ -135,20 +133,56 @@ exports.sendPasswordResetEmail = async (req, res) => {
         console.log(error);
         sendResponse(res, false, 500, error.message);
     }
-}
- exports.resetPassword = async(req,res) =>{
+};
+exports.resetPasswordForm = async (req, res) => {
     try {
         const passwordRessetToken = req.params.token;
-
-        let user = userService.findOneByField({emailToken:token});
-        if(user){
-
-        }else{
-            
+        const errorMessage = req.flash('error')[0];
+        let user = userService.findOneByField({ emailToken: passwordRessetToken });
+        if (user) {
+            return res.render("reset-password", {
+                emailToken: passwordRessetToken,
+                errorMessage: errorMessage,
+            });
+        } else {
+            return res.render("link-expired");
         }
-        
     } catch (error) {
         console.log(error);
         sendResponse(res, false, 500, error.message);
     }
- }
+};
+
+exports.resetPasswordSubmit = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        console.log(errors)
+        if (!errors.isEmpty()) {
+           let simplifiedErrors = {};
+            errors.array().forEach((error) => {
+                if (!simplifiedErrors[error.path]) {
+                     simplifiedErrors[error.path] = error.msg;
+                }
+            });
+            console.log(simplifiedErrors)
+            req.flash('error', simplifiedErrors)
+            return res.redirect(`/api/auth/resetPassword/${req.body.emailToken}`, ); 
+        } else {
+            const { password, confirmPassword } = req.body;
+            let user = await userService.findOneByField({
+                emailToken: req.body.emailToken,
+            });
+            if (user) {
+                user.emailToken = "";
+                user.password = password;
+                user = await user.save({ validateModifiedOnly: true });
+                return res.render('success', { message: "Password changed successfully"});
+            } else {
+                req.flash('error', {message:'Invalid link or may be link has been expired'});
+                return res.redirect(`/api/auth/resetPassword/${req.body.emailToken}`, ); 
+            }
+        }
+    } catch (error) {
+        sendResponse(res, false, 500, error.message);
+    }
+}

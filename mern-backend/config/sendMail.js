@@ -54,7 +54,7 @@ exports.sendPasswordResetEmail = async (res, user) => {
         to: user.email,
         subject: "Password Reset",
         html: compiledTemplate({
-            url: `${process.env.APP_URL}/api/auth/sendPasswordResetEmail/${user.emailToken}`,
+            url: `${process.env.APP_URL}/api/auth/resetPassword/${user.emailToken}`,
         }),
     };
     await transporter.sendMail(mailOptions);

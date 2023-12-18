@@ -43,26 +43,28 @@ function verifyWebtoken(req, res, next) {
 }
 
 async function generateToken(payload) {
-    const token = jwt.sign(payload, config.jwt_secret, { expiresIn: "1d" }); // You can change the expiration time as needed
-
+    const token = jwt.sign(payload, config.jwt_secret, { expiresIn: "7d" }); // You can change the expiration time as needed
     return token;
 }
 
 const verifyAdmin = async (req, res, next) => {
     try {
-        this.verifyWebtoken(req, res, () => {
+        await this.verifyWebtoken(req, res, () => {
             const isAdmin = req.user && req.user.userRole === "ADMIN";
-            if (!isAdmin) {
-                res.status(403).json({
+
+            if (isAdmin) {
+                next(); // Call next() if the user is an admin
+            } else {
+               return res.status(403).json({
                     success: false,
                     message:
-                        "Foridden - You're not authorized to acccess this site",
+                        "Forbidden - You're not authorized to access this site",
                 });
             }
         });
     } catch (error) {
         console.log(error);
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             error: error.message,
             message: "Internal server error",

@@ -1,17 +1,24 @@
-const express = require('express');
-const authController = require('../controllers/authController')
-const {signupFormValidate, loginFormValidation} = require('../utils/formValidation')
+const express = require("express");
+const authController = require("../controllers/authController");
+const {
+    signupFormValidate,
+    loginFormValidation,
+    passwordResetFormValidation,
+} = require("../utils/formValidation");
 
-const router = express.Router()
+const router = express.Router();
 
-router.post('/signUp',signupFormValidate, authController.signUp);
-
+router.post("/signUp", signupFormValidate, authController.signUp);
 //verify user email
-router.get('/emailVerify/:token', authController.veryfyUserEmail)
+router.get("/emailVerify/:token", authController.veryfyUserEmail);
 
-router.post("/login", loginFormValidation, authController.login)
+router.post("/login", loginFormValidation, authController.login);
 //send password reset email
-router.post('/sendPasswordResetEmail', authController.sendPasswordResetEmail)
+router.post("/sendPasswordResetEmail", authController.sendPasswordResetEmail);
+
 //reset password
-router.post('/resetPassword/:token', authController.resetPassword)
- module.exports = router
+router.get("/resetPassword/:token", authController.resetPasswordForm);
+
+//reset password
+router.post("/resetPasswordSubmit",passwordResetFormValidation, authController.resetPasswordSubmit)
+module.exports = router;

@@ -4,6 +4,8 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 const cors = require("cors");
+const session = require("express-session");
+const flash = require("express-flash");
 const bodyParser = require("body-parser");
 
 var indexRouter = require("./routes/index");
@@ -13,6 +15,9 @@ var authRouter = require("./routes/authRoutes");
 var app = express();
 
 app.use(cors());
+app.use(session({ secret: "keyboard cat", resave: false, saveUninitialized: false }));
+app.use(flash());
+
 // view engine setup
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");

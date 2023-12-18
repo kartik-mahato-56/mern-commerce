@@ -61,7 +61,31 @@ const loginFormValidation = [
         .isLength({ min: 6 })
         .withMessage("Password must be at least 6 characters long"),
 ];
+const passwordResetFormValidation = [
+    body("password")
+        .trim()
+        .not()
+        .isEmpty()
+        .withMessage("Password is required")
+        .isLength({ min: 6 })
+        .withMessage("Password must be at least 6 characters long"),
+    body("confirmPassword")
+        .trim()
+        .not()
+        .isEmpty()
+        .withMessage("Confirm password is required")
+        .isLength({ min: 6 })
+        .withMessage("Password must be at least 6 characters long")
+        .custom((value, { req }) => {
+            // Check if the passwords match
+            if (value !== req.body.password) {
+                throw new Error("Passwords do not match");
+            }
+            return true;
+        }),
+];
 module.exports = {
     signupFormValidate,
     loginFormValidation,
+    passwordResetFormValidation,
 };
