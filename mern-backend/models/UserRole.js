@@ -1,4 +1,4 @@
-const mongoose = require('mongoose')
+const mongoose = require("mongoose")
 
 const userRoleSchema = new mongoose.Schema({
     role: {
@@ -12,4 +12,4 @@ const userRoleSchema = new mongoose.Schema({
     },
 });
 
-const UserRole = mongoose.model('user_roles', userRoleSchema);
+const UserRole = mongoose.model('UserRole', userRoleSchema)

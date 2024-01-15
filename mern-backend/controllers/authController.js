@@ -7,7 +7,7 @@ const JWT = require("jsonwebtoken");
 const config = require("../config/config");
 const bCrypt = require("bcrypt");
 const User = require("../models/User");
-const {generateToken} = require("../middlewares/verifyWebToken")
+const { generateToken } = require("../middlewares/verifyWebToken");
 
 exports.signUp = async (req, res) => {
     try {
@@ -90,15 +90,34 @@ exports.login = async (req, res) => {
                 email: request.email,
             });
             if (user) {
-                if (bCrypt.compareSync(request.password, user.password)) {
-                    const token = generateToken({userId: user.id, userRole: user.role})
-                    let { password, ...userData } = {
-                        ...user._doc,
-                        accessToken: token,
-                    };
-                    sendResponse(res, true, 200, "Login successfull", userData);
+                if (!user.role.includes(request.role)) {
+                    sendResponse(
+                        res,
+                        false,
+                        403,
+                        "Forbidden - You're not authorized to access this site",
+                        {},
+                    );
                 } else {
-                    sendResponse(res, false, 401, "Incorrect password", {});
+                    if (bCrypt.compareSync(request.password, user.password)) {
+                        const token = await generateToken({
+                            userId: user.id,
+                            userRole: user.role,
+                        });
+                        let { password, ...userData } = {
+                            ...user._doc,
+                            accessToken: token,
+                        };
+                        sendResponse(
+                            res,
+                            true,
+                            200,
+                            "Login successfull",
+                            userData,
+                        );
+                    } else {
+                        sendResponse(res, false, 401, "Incorrect password", {});
+                    }
                 }
             } else {
                 sendResponse(res, false, 404, "User does not exist", {});
@@ -137,8 +156,10 @@ exports.sendPasswordResetEmail = async (req, res) => {
 exports.resetPasswordForm = async (req, res) => {
     try {
         const passwordRessetToken = req.params.token;
-        const errorMessage = req.flash('error')[0];
-        let user = userService.findOneByField({ emailToken: passwordRessetToken });
+        const errorMessage = req.flash("error")[0];
+        let user = userService.findOneByField({
+            emailToken: passwordRessetToken,
+        });
         if (user) {
             return res.render("reset-password", {
                 emailToken: passwordRessetToken,
@@ -156,17 +177,18 @@ exports.resetPasswordForm = async (req, res) => {
 exports.resetPasswordSubmit = async (req, res) => {
     try {
         const errors = validationResult(req);
-        console.log(errors)
         if (!errors.isEmpty()) {
-           let simplifiedErrors = {};
+            let simplifiedErrors = {};
             errors.array().forEach((error) => {
                 if (!simplifiedErrors[error.path]) {
-                     simplifiedErrors[error.path] = error.msg;
+                    simplifiedErrors[error.path] = error.msg;
                 }
             });
-            console.log(simplifiedErrors)
-            req.flash('error', simplifiedErrors)
-            return res.redirect(`/api/auth/resetPassword/${req.body.emailToken}`, ); 
+            console.log(simplifiedErrors);
+            req.flash("error", simplifiedErrors);
+            return res.redirect(
+                `/api/auth/resetPassword/${req.body.emailToken}`,
+            );
         } else {
             const { password, confirmPassword } = req.body;
             let user = await userService.findOneByField({
@@ -176,13 +198,19 @@ exports.resetPasswordSubmit = async (req, res) => {
                 user.emailToken = "";
                 user.password = password;
                 user = await user.save({ validateModifiedOnly: true });
-                return res.render('success', { message: "Password changed successfully"});
+                return res.render("success", {
+                    message: "Password changed successfully",
+                });
             } else {
-                req.flash('error', {message:'Invalid link or may be link has been expired'});
-                return res.redirect(`/api/auth/resetPassword/${req.body.emailToken}`, ); 
+                req.flash("error", {
+                    message: "Invalid link or may be link has been expired",
+                });
+                return res.redirect(
+                    `/api/auth/resetPassword/${req.body.emailToken}`,
+                );
             }
         }
     } catch (error) {
         sendResponse(res, false, 500, error.message);
     }
-}
+};

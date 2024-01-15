@@ -44,7 +44,7 @@ const signupFormValidate = [
             return true;
         }),
 ];
-
+const validRoles = ["ADMIN", "VENDOR", "CUSTOMER"];
 const loginFormValidation = [
     body("email")
         .trim()
@@ -60,6 +60,15 @@ const loginFormValidation = [
         .withMessage("Password is required")
         .isLength({ min: 6 })
         .withMessage("Password must be at least 6 characters long"),
+    body("role")
+        .trim()
+        .not()
+        .isEmpty()
+        .withMessage("Role is required")
+        .isIn(validRoles)
+        .withMessage(
+            "Invalid role value. Allowed values are ADMIN, VENDOR, CUSTOMER",
+        ),
 ];
 const passwordResetFormValidation = [
     body("password")
@@ -84,8 +93,25 @@ const passwordResetFormValidation = [
             return true;
         }),
 ];
+const subCategoryFormValidation = [
+    body("name")
+        .trim()
+        .not()
+        .isEmpty()
+        .withMessage("Name is required")
+        .isLength({ min: 3 })
+        .withMessage("Name must be at least 3 characters long"),
+    body("categoryId")
+        .trim()
+        .not()
+        .isEmpty()
+        .withMessage("Category id is required"),
+
+
+];
 module.exports = {
     signupFormValidate,
     loginFormValidation,
     passwordResetFormValidation,
+    subCategoryFormValidation,
 };
